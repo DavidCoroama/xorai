@@ -1,7 +1,5 @@
 #include <xorai/activation.h>
 #include <xorai/network.h>
-#include <iostream>
-#include <fstream>
 #include <cassert>
 
 Network::Network(const U64Array& layers, f64 learning_rate)
@@ -123,8 +121,7 @@ Matrix* Network::test(f64 a, f64 b)
     Matrix* input = Matrix::from({a, b});
     Matrix* output = feed_forward(input)->clone();
 
-    if(!this->data.empty())
-        this->data.map(BASIC_UNARY_DELETE);
+    this->data.map_if(!this->data.empty(), BASIC_UNARY_DELETE);
 
     /* Revert back to the networks old data state */
     this->data = netdata;

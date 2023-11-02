@@ -2,10 +2,9 @@
 #ifndef BENN_NETWORK_H
 #define BENN_NETWORK_H
 
-#include <xorai/matrix.h>
 #include <xorai/model.h>
 
-/* Indicates the number of epochs completed during network training. */
+/* Adds comments to `stdout` during network training. */
 //#define DEBUG
 
 /* Strictly prevents debug mode. */

@@ -26,7 +26,7 @@ Model* ModelViewer::load()
         std::cout << errors << std::endl;
         exit(EXIT_FAILURE);
     }
-    else if(!check())
+    else if(!check_root_members())
     {
         std::cout << "[C++ ModelViewer]: Cannot load a malformed model file: `" << this->filename << "`" << std::endl;
         exit(EXIT_FAILURE);
@@ -132,7 +132,7 @@ void ModelViewer::write(const Json::Value& json)
     writer->write(json, &this->filestream);
 }
 
-bool ModelViewer::check()
+bool ModelViewer::check_root_members()
 {
     bool flags[4] = {false, false, false, false};
 

@@ -37,6 +37,8 @@ public:
 
 private:
     bool check_root_members();
+    std::fstream create_file_stream(bool = true);
+
     static Json::StreamWriter* create_stream_writer();
     static Json::CharReaderBuilder create_reader_builder();
 

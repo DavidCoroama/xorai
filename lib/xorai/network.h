@@ -1,7 +1,8 @@
 #pragma once
-#ifndef BENN_NETWORK_H
-#define BENN_NETWORK_H
+#ifndef XORAI_NETWORK_H
+#define XORAI_NETWORK_H
 
+#include <xorai/matrix.h>
 #include <xorai/model.h>
 
 /* Adds comments to `stdout` during network training. */
@@ -30,4 +31,4 @@ public:
     f64 learning_rate;
 };
 
-#endif //BENN_NETWORK_H
+#endif //XORAI_NETWORK_H

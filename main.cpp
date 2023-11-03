@@ -16,7 +16,7 @@ void train_model(Dataset& inputs, Dataset& targets)
 	Network network((U64Array){2, 3, 1}, 0.5);
 
 	/* Train the model with the given inputs and targets. */
-    network.train(inputs, targets, 1);
+    network.train(inputs, targets, 1000);
 
 	/* Save the model to a file called `model.xorai` using 64 bit 
 	   floating point precision for each weight, biases and data. */
@@ -56,7 +56,9 @@ int main()
 
     #if defined(TRAIN_MODEL_EXAMPLE)
 		train_model(inputs, targets);
-	#elif defined(USE_MODEL_EXAMPLE)
+	#endif
+	
+	#if defined(USE_MODEL_EXAMPLE)
 		use_model();
 	#endif
 

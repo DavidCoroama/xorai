@@ -5,7 +5,7 @@
 ModelViewer::ModelViewer(std::string filename, i64 float_precision)
     : filename(std::move(filename)), float_precision(float_precision)
 {
-    this->filestream.open(this->filename, std::ios::in | std::ios::out);
+    this->filestream = create_file_stream(false);
     this->writer = ModelViewer::create_stream_writer();
 }
 
@@ -20,9 +20,15 @@ Model* ModelViewer::load()
     Json::CharReaderBuilder builder = ModelViewer::create_reader_builder();
     JSONCPP_STRING errors;
 
-    if(!Json::parseFromStream(builder, this->filestream, &this->root, &errors))
+    if(!this->filestream)
     {
-        std::cout << "[C++ ModelViewer]: Failed to load model file: `" << this->filename << '`' << std::endl;
+        std::cout << "[C++ ModelViewer]: Failed to load model file: `" << this->filename << "`\n";
+        std::cout << "[!] File does not exist." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    else if(!Json::parseFromStream(builder, this->filestream, &this->root, &errors))
+    {
+        std::cout << "[C++ ModelViewer]: Failed to parse model file: `" << this->filename << "`\n";
         std::cout << errors << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -129,6 +135,9 @@ T ModelViewer::parse(const Json::Value& j)
 
 void ModelViewer::write(const Json::Value& json)
 {
+    if(!this->filestream)
+        this->filestream = create_file_stream();
+
     writer->write(json, &this->filestream);
 }
 
@@ -148,6 +157,16 @@ bool ModelViewer::check_root_members()
     }
 
     return flags[0] && flags[1] && flags[2] && flags[3];
+}
+
+std::fstream ModelViewer::create_file_stream(bool truncate)
+{
+    std::fstream filestream(this->filename, std::ios::in | std::ios::out);
+
+    if(!filestream && truncate)
+        return std::fstream(this->filename, std::ios::in | std::ios::out | std::ios::trunc);        
+
+    return filestream;
 }
 
 Json::StreamWriter* ModelViewer::create_stream_writer()

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef BENN_TYPES_H
-#define BENN_TYPES_H
+#ifndef XORAI_TYPES_H
+#define XORAI_TYPES_H
 
 #include <vector>
 
@@ -130,4 +130,4 @@ T(cvector<u64>,      U64Array);
 T(cvector<f64>,      F64Array);
 T(cvector<F64Array>, Dataset);
 
-#endif //BENN_TYPES_H
+#endif //XORAI_TYPES_H

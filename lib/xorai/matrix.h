@@ -1,6 +1,6 @@
 #pragma once
-#ifndef BENN_MATRIX_H
-#define BENN_MATRIX_H
+#ifndef XORAI_MATRIX_H
+#define XORAI_MATRIX_H
 
 #include <xorai/types.h>
 #include <functional>
@@ -43,4 +43,4 @@ T(cvector<Matrix*>, MatrixArray);
 #undef U
 #undef T
 
-#endif //BENN_MATRIX_H
+#endif //XORAI_MATRIX_H

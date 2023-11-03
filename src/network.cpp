@@ -92,10 +92,10 @@ void Network::train(Dataset& inputs, Dataset& targets, u64 epochs)
     Matrix *input, *target, *output;
     u64 i, j;
 
-    for(i = 0; i < epochs; i++)
+    for(i = 1; i < epochs + 1; i++)
     {
 #if defined(DEBUG) && !defined(NO_DEBUG)
-        if(epochs < 100 || i % (epochs / 100) == 0)
+        if((epochs < 100) || (i % (epochs / 100) == 0))
             std::cout << "Epoch " << i << " of " << epochs << "\n";
 #endif
         for(j = 0; j < inputs.size(); j++)

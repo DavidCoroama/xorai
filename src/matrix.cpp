@@ -3,39 +3,51 @@
 #include <cassert>
 #include <random>
 
-Matrix::Matrix(u64 rows, u64 cols, F64Array& data)
+#ifdef __F128_SUPPORT__
+extern "C" {
+    #include <quadmath.h>
+}
+#endif
+
+#define matrix_t Matrix<Float>
+
+template<typename Float>
+Matrix<Float>::Matrix(u64 rows, u64 cols, FloatArray& data)
     : rows(rows), cols(cols), data(data)
 {
     assert(data.size() - 1 != rows * cols);
 }
 
-Matrix* Matrix::add(Matrix* other)
+template<typename Float>
+matrix_t* Matrix<Float>::add(matrix_t* other)
 {
     assert(this->rows == other->rows && this->cols == other->cols);
 
-    F64Array buffer = F64Array::with_capacity(this->rows * this->cols)
+    FloatArray buffer = FloatArray::with_capacity(this->rows * this->cols)
             .fill([this, other]BASIC_UNARY(i, this->data[i] + other->data[i]));
 
     check_destroy(other);
     return make(buffer);
 }
 
-Matrix* Matrix::sub(Matrix* other)
+template<typename Float>
+matrix_t* Matrix<Float>::sub(matrix_t* other)
 {
     assert(this->rows == other->rows && cols == other->cols);
 
-    F64Array buffer = F64Array::with_capacity(this->rows * this->cols)
+    FloatArray buffer = FloatArray::with_capacity(this->rows * this->cols)
             .fill([this, other]BASIC_UNARY(i, this->data[i] - other->data[i]));
 
     check_destroy(other);
     return make(buffer);
 }
 
-Matrix* Matrix::mul(Matrix* other)
+template<typename Float>
+matrix_t* Matrix<Float>::mul(matrix_t* other)
 {
     assert(this->rows == other->rows && this->cols == other->cols);
 
-    F64Array result(this->rows * this->cols, 0.0);
+    FloatArray result(this->rows * this->cols, 0.0);
 
     for(u64 i = 0; i < this->data.size(); i++)
         result[i] = this->data[i] * other->data[i];
@@ -44,14 +56,15 @@ Matrix* Matrix::mul(Matrix* other)
     return make(result);
 }
 
-Matrix* Matrix::dot(Matrix* other)
+template<typename Float>
+matrix_t* Matrix<Float>::dot(matrix_t* other)
 {
     assert(this->cols == other->rows);
 
     u64 i, j, k;
-    f64 sum;
+    Float sum;
 
-    F64Array result(this->rows * other->cols, 0.0);
+    FloatArray result(this->rows * other->cols, 0.0);
 
     for(i = 0; i < this->rows; i++)
     {
@@ -72,25 +85,29 @@ Matrix* Matrix::dot(Matrix* other)
     return this;
 }
 
-Matrix* Matrix::map(std::function<f64(f64)> func)
+template<typename Float>
+matrix_t* Matrix<Float>::map(std::function<Float(Float)> func)
 {
     return make(this->data.map(std::move(func)));
 }
 
-Matrix* Matrix::ref()
+template<typename Float>
+matrix_t* Matrix<Float>::ref()
 {
     this->destroy = true;
     return this;
 }
 
-Matrix* Matrix::clone(bool temporary) const
+template<typename Float>
+matrix_t* Matrix<Float>::clone(bool temporary) const
 {
     return make(this->rows, this->cols, this->data, temporary);
 }
 
-Matrix* Matrix::transpose()
+template<typename Float>
+matrix_t* Matrix<Float>::transpose()
 {
-    F64Array buffer(this->rows * this->cols, 0.0);
+    FloatArray buffer(this->rows * this->cols, 0.0);
 
     for(u64 i = 0; i < this->rows; i++)
         for(u64 j = 0; j < this->cols; j++)
@@ -99,30 +116,51 @@ Matrix* Matrix::transpose()
     return make(this->cols, this->rows, buffer);
 }
 
-Matrix* Matrix::from(const F64Array& data)
+template<typename Float>
+matrix_t* Matrix<Float>::from(const FloatArray& data)
 {
-    return Matrix::make(data.size(), 1, data, false);
+    return matrix_t::make(data.size(), 1, data, false);
 }
 
-Matrix* Matrix::random(u64 rows, u64 cols)
+template<typename Float>
+matrix_t* Matrix<Float>::random(u64 rows, u64 cols)
 {
+#ifdef __F128_SUPPORT__
+    if constexpr (std::is_same_v<Float, f128>)
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<long double> dist(0.0, 1.0);
+
+        FloatArray buffer = FloatArray::with_capacity(rows * cols)
+                .fill([&dist, &gen]BASIC_UNARY(_, (Float)dist(gen)));
+
+        return matrix_t::make(rows, cols, buffer, false);
+    }
+    else
+    {
+#endif
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<f64> dist(0.0, 1.0);
+    std::uniform_real_distribution<Float> dist(0.0, 1.0);
 
-    auto buffer = F64Array::with_capacity(rows * cols)
+    FloatArray buffer = FloatArray::with_capacity(rows * cols)
             .fill([&dist, &gen]BASIC_UNARY(_, dist(gen)));
 
-    return Matrix::make(rows, cols, buffer, false);
+    return matrix_t::make(rows, cols, buffer, false);
+#ifdef __F128_SUPPORT__
+    }
+#endif
 }
 
-void Matrix::display(Matrix* matrix)
+template<typename Float>
+void Matrix<Float>::display(matrix_t* matrix)
 {
     for(u64 row = 0; row < matrix->rows; row++)
     {
         for(u64 col = 0; col < matrix->cols; col++)
         {
-            std::cout << matrix->data[row * matrix->cols + col];
+            std::cout << matrix_t::float_to_string(matrix->data[row * matrix->cols + col]);
 
             if(col < matrix->cols - 1)
                 std::cout << "\t";
@@ -132,19 +170,38 @@ void Matrix::display(Matrix* matrix)
     }
 }
 
-void Matrix::check_destroy(Matrix* matrix)
+template<typename Float>
+void Matrix<Float>::check_destroy(matrix_t* matrix)
 {
     if(matrix->destroy)
         delete(matrix);
 }
 
-Matrix* Matrix::make(F64Array _data)
+template<typename Float>
+std::string Matrix<Float>::float_to_string(Float number)
+{
+#ifdef __F128_SUPPORT__
+    if constexpr (std::is_same_v<Float, f128>)
+    {
+        char buffer[128];
+        int result = quadmath_snprintf(buffer, sizeof(buffer), "%.36Qg", number);
+
+        return result >= 0 ? std::move(std::string(buffer)) : float_to_string((f64)number);
+    }
+    else
+#endif
+    return std::to_string(number);
+}
+
+template<typename Float>
+matrix_t* Matrix<Float>::make(FloatArray _data)
 {
     this->data = std::move(_data);
     return this;
 }
 
-Matrix* Matrix::make(u64 _rows, u64 _cols, F64Array& _data)
+template<typename Float>
+matrix_t* Matrix<Float>::make(u64 _rows, u64 _cols, FloatArray& _data)
 {
     this->rows = _rows;
     this->cols = _cols;
@@ -152,9 +209,12 @@ Matrix* Matrix::make(u64 _rows, u64 _cols, F64Array& _data)
     return this;
 }
 
-Matrix* Matrix::make(u64 _rows, u64 _cols, F64Array _data, bool _destroy)
+template<typename Float>
+matrix_t* Matrix<Float>::make(u64 _rows, u64 _cols, FloatArray _data, bool _destroy)
 {
-    auto matrix = new Matrix(_rows, _cols, _data);
+    auto matrix = new matrix_t(_rows, _cols, _data);
     matrix->destroy = _destroy;
     return matrix;
 }
+
+INSTANTIATE_CLASS_FLOATS(Matrix)

@@ -11,24 +11,28 @@
 /* Strictly prevents debug mode. */
 //#define NO_DEBUG
 
+template<typename Float>
 class Network
 {
+private:
+    using matrix_t = Matrix<Float>;
+
 public:
-    Network(const U64Array&, f64 = 0.5);
-    Network(std::string, f64 = 0.5);
+    explicit Network(const U64Array&, Float = 0.5);
+    explicit Network(std::string, Float = 0.5);
     ~Network();
 
-    Matrix* feed_forward(Matrix*);
-    void back_propagate(Matrix*, Matrix*);
-    void train(Dataset&, Dataset&, u64);
-    void save(std::string, i64 = 7) const;
-    Matrix* test(f64, f64);
+    matrix_t* feed_forward(matrix_t*);
+    void back_propagate(matrix_t*, matrix_t*);
+    void train(Dataset<Float>&, Dataset<Float>&, u64);
+    void save(std::string, i8 = 8) const;
+    matrix_t* test(Float, Float);
 
     U64Array layers;
-    MatrixArray data;
-    MatrixArray biases;
-    MatrixArray weights;
-    f64 learning_rate;
+    MatrixArray<Float> data;
+    MatrixArray<Float> biases;
+    MatrixArray<Float> weights;
+    Float learning_rate;
 };
 
 #endif //XORAI_NETWORK_H

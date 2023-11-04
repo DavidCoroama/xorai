@@ -6,41 +6,46 @@
 #include <functional>
 #include <iostream>
 
+template<typename Float>
 class Matrix
 {
+private:
+    typedef cvector<Float> FloatArray;
+    typedef Matrix<Float> matrix_t;
+
 public:
-    Matrix(u64, u64, F64Array&);
+    Matrix(u64, u64, FloatArray&);
 
-    Matrix* add(Matrix*);
-    Matrix* sub(Matrix*);
-    Matrix* mul(Matrix*);
-    Matrix* dot(Matrix*);
-    Matrix* map(std::function<f64(f64)>);
-    Matrix* ref();
-    Matrix* clone(bool = false) const;
-    Matrix* transpose();
+    matrix_t* add(matrix_t*);
+    matrix_t* sub(matrix_t*);
+    matrix_t* mul(matrix_t*);
+    matrix_t* dot(matrix_t*);
+    matrix_t* map(std::function<Float(Float)>);
+    matrix_t* ref();
+    matrix_t* clone(bool = false) const;
+    matrix_t* transpose();
 
-    static Matrix* from(const F64Array&);
-    static Matrix* random(u64, u64);
-    static void display(Matrix*);
+    static matrix_t* from(const FloatArray&);
+    static matrix_t* random(u64, u64);
+    static void display(matrix_t*);
 
     u64 rows;
     u64 cols;
-    F64Array data;
+    FloatArray data;
 
 private:
-    static void check_destroy(Matrix*);
-    Matrix* make(F64Array);
-    Matrix* make(u64, u64, F64Array&);
-    static Matrix* make(u64, u64, F64Array, bool);
+    static void check_destroy(matrix_t*);
+    static std::string float_to_string(Float);
+
+    matrix_t* make(FloatArray);
+    matrix_t* make(u64, u64, FloatArray&);
+    static matrix_t* make(u64, u64, FloatArray, bool);
 
     bool destroy = false;
 };
 
-T(cvector<Matrix*>, MatrixArray);
 
-#undef S
-#undef U
-#undef T
+template<typename Float>
+using MatrixArray = cvector<Matrix<Float>*>;
 
 #endif //XORAI_MATRIX_H

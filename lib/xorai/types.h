@@ -4,24 +4,75 @@
 
 #include <vector>
 
+/* Enables 128-bit floating point numbers.
+ * If your system is not compatible with __float128,
+ * it will be undefined automatically. */
+//#define __F128_SUPPORT__
+
 #define BASIC_UNARY(arg, code) (const auto& arg) { return code; }
 #define BASIC_UNARY_DELETE [](auto* a) { delete(a); }
+
+#define INSTANTIATE_CLASS_FLOATS(c) \
+    template class c<f32>;          \
+    template class c<f64>;          \
+    template class c<f128>;
 
 #define S signed
 #define U unsigned
 #define T(v, n) typedef v n
 
-T(U short,     u16);
-T(U long,      u32);
-T(U long long, u64);
+T(S char,      i8);
+T(S short int, i16);
+T(S int,       i32);
 
-T(S short,     i16);
-T(S long,      i32);
-T(S long long, i64);
+T(U char,      u8);
+T(U short int, u16);
+T(U int,       u32);
 
-T(float,       f16);
-T(double,      f32);
-T(long double, f64);
+#define MIN_F32_PRECISION 6
+#define MAX_F32_PRECISION 9
+
+#define MIN_F64_PRECISION 15
+#define MAX_F64_PRECISION 17
+
+T(float,       f32);
+T(double,      f64);
+
+#if defined(__SIZEOF_FLOAT128__) && defined(__F128_SUPPORT__)
+T(__float128,  f128);
+
+#define MIN_F128_PRECISION 18
+#define MAX_F128_PRECISION 35
+#else
+T(long double, f128);
+
+#define MIN_F128_PRECISION MIN_F64_PRECISION
+#define MAX_F128_PRECISION MAX_F64_PRECISION
+#endif
+
+#define UseMinPrecision(bitsize) MIN_F ## bitsize ## _PRECISION
+#define UseMaxPrecision(bitsize) MAX_F ## bitsize ## _PRECISION
+#define UsePrecision(bitsize) UseMinPrecision(bitsize)
+
+#if defined(__x86_64__) && !defined(__ILP32__)
+T(U long int, u64);
+T(S long int, i64);
+#else
+T(U long long int, u64);
+T(S long long int, i64);
+#endif
+
+#ifdef __SIZEOF_INT128__
+T(__int128_t,  i128);
+T(__uint128_t, u128);
+#endif
+
+#if defined(__F128_SUPPORT__) && (!defined(__SIZEOF_FLOAT128__) && !defined(__STDCPP_FLOAT128_T__))
+#undef __F128_SUPPORT__
+#endif
+
+template<typename _Tp, typename... _Types>
+constexpr bool is_type_of = (std::is_same_v<_Tp, _Types> || ...);
 
 template<typename _Tp, typename _Alloc = std::allocator<_Tp>>
 class cvector : public std::vector<_Tp, _Alloc>
@@ -87,9 +138,9 @@ public:
 
     template<typename _UnaryOperation>
     std::conditional_t<
-        !__cvector_map_details<_UnaryOperation>::IsVoidReturnType::value,
-        typename __cvector_map_details<_UnaryOperation>::NonVoidReturnType,
-        void
+            !__cvector_map_details<_UnaryOperation>::IsVoidReturnType::value,
+            typename __cvector_map_details<_UnaryOperation>::NonVoidReturnType,
+            void
     >
     map(_UnaryOperation func)
     {
@@ -126,8 +177,16 @@ public:
     }
 };
 
-T(cvector<u64>,      U64Array);
-T(cvector<f64>,      F64Array);
-T(cvector<F64Array>, Dataset);
+T(cvector<u64>,  U64Array);
+T(cvector<f32>,  F32Array);
+T(cvector<f64>,  F64Array);
+T(cvector<f128>, F128Array);
+
+template<typename Float = f32>
+using Dataset = cvector<cvector<Float>>;
+
+#undef S
+#undef U
+#undef T
 
 #endif //XORAI_TYPES_H

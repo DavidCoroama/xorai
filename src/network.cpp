@@ -2,7 +2,10 @@
 #include <xorai/network.h>
 #include <cassert>
 
-Network::Network(const U64Array& layers, f64 learning_rate)
+#define matrix_t Matrix<Float>
+
+template<typename Float>
+Network<Float>::Network(const U64Array& layers, Float learning_rate)
 {
     this->data = {};
     this->biases = {};
@@ -10,19 +13,20 @@ Network::Network(const U64Array& layers, f64 learning_rate)
 
     for(u64 i = 0; i < layers.size() - 1; i++)
     {
-        this->weights.push_back(Matrix::random(layers[i + 1], layers[i]));
-        this->biases.push_back(Matrix::random(layers[i + 1], 1));
+        this->weights.push_back(matrix_t::random(layers[i + 1], layers[i]));
+        this->biases.push_back(matrix_t::random(layers[i + 1], 1));
     }
 
     this->layers = layers;
     this->learning_rate = learning_rate;
 }
 
-Network::Network(std::string filename, f64 learning_rate)
+template<typename Float>
+Network<Float>::Network(std::string filename, Float learning_rate)
 {
 
-    ModelViewer viewer(std::move(filename));
-    Model* model = viewer.load();
+    ModelViewer<Float> viewer(std::move(filename));
+    Model<Float>* model = viewer.load();
 
     this->data = model->data;
     this->biases = model->biases;
@@ -34,7 +38,8 @@ Network::Network(std::string filename, f64 learning_rate)
     delete(model);
 }
 
-Network::~Network()
+template<typename Float>
+Network<Float>::~Network()
 {
     auto d = BASIC_UNARY_DELETE;
 
@@ -43,13 +48,14 @@ Network::~Network()
     this->weights.map(d);
 }
 
-Matrix* Network::feed_forward(Matrix* inputs)
+template<typename Float>
+matrix_t* Network<Float>::feed_forward(matrix_t* inputs)
 {
     assert(this->layers[0] == inputs->data.size());
 
     this->data.map_if(!this->data.empty(), BASIC_UNARY_DELETE);
 
-    Matrix* current = inputs;
+    matrix_t* current = inputs;
     this->data = {current->clone()};
 
     for(u64 i = 0; i < this->layers.size() - 1; i++)
@@ -65,10 +71,11 @@ Matrix* Network::feed_forward(Matrix* inputs)
     return current;
 }
 
-void Network::back_propagate(Matrix* inputs, Matrix* targets)
+template<typename Float>
+void Network<Float>::back_propagate(matrix_t* inputs, matrix_t* targets)
 {
-    Matrix* errors = targets->clone()->sub(inputs);
-    Matrix* gradients = inputs->clone()->map(derivative);
+    matrix_t* errors = targets->clone()->sub(inputs);
+    matrix_t* gradients = inputs->clone()->map(derivative);
 
     auto scale = [this]BASIC_UNARY(x, x * this->learning_rate);
 
@@ -87,9 +94,10 @@ void Network::back_propagate(Matrix* inputs, Matrix* targets)
     delete(gradients);
 }
 
-void Network::train(Dataset& inputs, Dataset& targets, u64 epochs)
+template<typename Float>
+void Network<Float>::train(Dataset<Float>& inputs, Dataset<Float>& targets, u64 epochs)
 {
-    Matrix *input, *target, *output;
+    matrix_t *input, *target, *output;
     u64 i, j;
 
     for(i = 1; i < epochs + 1; i++)
@@ -100,8 +108,8 @@ void Network::train(Dataset& inputs, Dataset& targets, u64 epochs)
 #endif
         for(j = 0; j < inputs.size(); j++)
         {
-            input = Matrix::from(inputs[j].clone());
-            target = Matrix::from(targets[j].clone());
+            input = matrix_t::from(inputs[j].clone());
+            target = matrix_t::from(targets[j].clone());
             output = feed_forward(input);
 
             back_propagate(output, target);
@@ -112,14 +120,15 @@ void Network::train(Dataset& inputs, Dataset& targets, u64 epochs)
     }
 }
 
-Matrix* Network::test(f64 a, f64 b)
+template<typename Float>
+matrix_t* Network<Float>::test(Float a, Float b)
 {
     /* Save the network's current data state */
-    MatrixArray netdata = this->data.clone();
+    MatrixArray<Float> netdata = this->data.clone();
     this->data = {};
 
-    Matrix* input = Matrix::from({a, b});
-    Matrix* output = feed_forward(input)->clone();
+    matrix_t* input = matrix_t::from({a, b});
+    matrix_t* output = feed_forward(input)->clone();
 
     this->data.map_if(!this->data.empty(), BASIC_UNARY_DELETE);
 
@@ -130,9 +139,10 @@ Matrix* Network::test(f64 a, f64 b)
     return output;
 }
 
-void Network::save(std::string filename, i64 float_precision) const
+template<typename Float>
+void Network<Float>::save(std::string filename, i8 float_precision) const
 {
-    ModelViewer viewer(std::move(filename), float_precision);
+    ModelViewer<Float> viewer(std::move(filename), float_precision);
     Json::Value model;
 
     model["d"] = viewer.jsonify(this->data);
@@ -142,3 +152,5 @@ void Network::save(std::string filename, i64 float_precision) const
 
     viewer.write(model);
 }
+
+INSTANTIATE_CLASS_FLOATS(Network)

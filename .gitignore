@@ -13,3 +13,5 @@ build
 .vscode
 history
 *.xorai
+cmake-build-*
+.idea

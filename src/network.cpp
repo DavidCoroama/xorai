@@ -7,6 +7,8 @@
 template<typename Float>
 Network<Float>::Network(const U64Array& layers, Float learning_rate)
 {
+    assert_float_type();
+
     this->data = {};
     this->biases = {};
     this->weights = {};
@@ -24,6 +26,7 @@ Network<Float>::Network(const U64Array& layers, Float learning_rate)
 template<typename Float>
 Network<Float>::Network(std::string filename, Float learning_rate)
 {
+    assert_float_type();
 
     ModelViewer<Float> viewer(std::move(filename));
     Model<Float>* model = viewer.load();
@@ -63,7 +66,7 @@ matrix_t* Network<Float>::feed_forward(matrix_t* inputs)
         current = this->weights[i]->clone()
                 ->dot(current)
                 ->add(this->biases[i])
-                ->map(sigmoid);
+                ->map(sigmoid<Float>);
 
         this->data.push_back(current);
     }
@@ -75,7 +78,7 @@ template<typename Float>
 void Network<Float>::back_propagate(matrix_t* inputs, matrix_t* targets)
 {
     matrix_t* errors = targets->clone()->sub(inputs);
-    matrix_t* gradients = inputs->clone()->map(derivative);
+    matrix_t* gradients = inputs->clone()->map(derivative<Float>);
 
     auto scale = [this]BASIC_UNARY(x, x * this->learning_rate);
 
@@ -87,7 +90,7 @@ void Network<Float>::back_propagate(matrix_t* inputs, matrix_t* targets)
         this->biases[i]->add(gradients->ref());
 
         errors = this->weights[i]->clone()->transpose()->dot(errors->ref());
-        gradients = this->data[i]->clone()->map(derivative);
+        gradients = this->data[i]->clone()->map(derivative<Float>);
     }
 
     delete(errors);
@@ -151,6 +154,17 @@ void Network<Float>::save(std::string filename, i8 float_precision) const
     model["l"] = viewer.jsonify(this->layers);
 
     viewer.write(model);
+}
+
+template<typename Float>
+void Network<Float>::assert_float_type()
+{
+    if constexpr (!is_float_type<Float>)
+    {
+        std::cout << "[C++ Network]: Network<Float> requires Float to be a floating point type.\n";
+        std::cout << "\tSupported float types include: [f32 (float), f64 (double), and f128 (long double || __float128)]" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 INSTANTIATE_CLASS_FLOATS(Network)

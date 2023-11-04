@@ -74,6 +74,9 @@ T(__uint128_t, u128);
 template<typename _Tp, typename... _Types>
 constexpr bool is_type_of = (std::is_same_v<_Tp, _Types> || ...);
 
+template<typename _Tp>
+constexpr bool is_float_type = is_type_of<_Tp, f32, f64, f128>;
+
 template<typename _Tp, typename _Alloc = std::allocator<_Tp>>
 class cvector : public std::vector<_Tp, _Alloc>
 {

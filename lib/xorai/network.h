@@ -33,6 +33,9 @@ public:
     MatrixArray<Float> biases;
     MatrixArray<Float> weights;
     Float learning_rate;
+
+private:
+    void assert_float_type();
 };
 
 #endif //XORAI_NETWORK_H

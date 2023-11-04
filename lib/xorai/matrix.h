@@ -40,6 +40,7 @@ private:
     matrix_t* make(FloatArray);
     matrix_t* make(u64, u64, FloatArray&);
     static matrix_t* make(u64, u64, FloatArray, bool);
+    void assert_float_type();
 
     bool destroy = false;
 };

@@ -4,7 +4,13 @@
 
 #include <xorai/types.h>
 
-f64 sigmoid(f64);
-f64 derivative(f64);
+template<typename Float>
+Float Exp(Float);
+
+template<typename Float>
+Float sigmoid(Float);
+
+template<typename Float>
+Float derivative(Float);
 
 #endif //XORAI_ACTIVATION_H

@@ -15,6 +15,7 @@ template<typename Float>
 Matrix<Float>::Matrix(u64 rows, u64 cols, FloatArray& data)
     : rows(rows), cols(cols), data(data)
 {
+    assert_float_type();
     assert(data.size() - 1 != rows * cols);
 }
 
@@ -215,6 +216,17 @@ matrix_t* Matrix<Float>::make(u64 _rows, u64 _cols, FloatArray _data, bool _dest
     auto matrix = new matrix_t(_rows, _cols, _data);
     matrix->destroy = _destroy;
     return matrix;
+}
+
+template<typename Float>
+void Matrix<Float>::assert_float_type()
+{
+    if constexpr (!is_float_type<Float>)
+    {
+        std::cout << "[C++ Matrix]: Matrix<Float> requires Float to be a floating point type.\n";
+        std::cout << "\tSupported float types include: [f32 (float), f64 (double), and f128 (long double || __float128)]" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 INSTANTIATE_CLASS_FLOATS(Matrix)

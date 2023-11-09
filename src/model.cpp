@@ -63,7 +63,7 @@ matrix_t* ModelViewer<Float>::load(const Json::Value& matrix)
     u64 rows = _rows.asUInt64();
     u64 cols = _cols.asUInt64();
 
-    cvector<Float> data = cvector<Float>::with_capacity((u64)_data.size());
+    cvector<Float> data = cvector<Float>::with_capacity(_data.size());
 
     std::transform(
         _data.begin(),
@@ -103,8 +103,8 @@ Json::Value ModelViewer<Float>::jsonify(matrix_t* matrix) const
     Json::Value object(Json::objectValue);
     Json::Value data(Json::arrayValue);
 
-    for(const Float& v : matrix->data)
-        data.append(jsonify(v));
+    for(const Float& value : matrix->data)
+        data.append(jsonify(value));
 
     object["r"] = Json::UInt64(matrix->rows);
     object["c"] = Json::UInt64(matrix->cols);
@@ -119,13 +119,13 @@ std::string ModelViewer<Float>::jsonify(Float number) const {
     if constexpr (std::is_same_v<Float, f128>)
     {
         std::string output = ModelViewer<Float>::f128_to_string(number, this->float_precision);
-        return !output.empty() ? output : ModelViewer<Float>::f64_to_string((f64)number);
+        return !output.empty() ? output : ModelViewer<Float>::f64_to_string(static_cast<f64>(number));
     }
     else
     {
 #endif
     std::stringstream s;
-    (s << std::fixed << std::setprecision((int)this->float_precision) << number);
+    (s << std::fixed << std::setprecision(static_cast<int>(this->float_precision)) << number);
     return s.str();
 #ifdef __F128_SUPPORT__
     }
@@ -211,7 +211,7 @@ template<typename Float>
 std::string ModelViewer<Float>::f128_to_string(f128 number, i8 precision)
 {
     std::stringstream p;
-    p << "%." << (int)precision << "Qg";
+    p << "%." << static_cast<int>(precision) << "Qg";
 
     char buffer[128];
     int result = quadmath_snprintf(buffer, sizeof(buffer), p.str().c_str(), number);

@@ -134,7 +134,7 @@ matrix_t* Matrix<Float>::random(u64 rows, u64 cols)
         std::uniform_real_distribution<long double> dist(0.0, 1.0);
 
         FloatArray buffer = FloatArray::with_capacity(rows * cols)
-                .fill([&dist, &gen]BASIC_UNARY(_, (Float)dist(gen)));
+                .fill([&dist, &gen]BASIC_UNARY(_, static_cast<Float>(dist(gen))));
 
         return matrix_t::make(rows, cols, buffer, false);
     }
@@ -187,7 +187,7 @@ std::string Matrix<Float>::float_to_string(Float number)
         char buffer[128];
         int result = quadmath_snprintf(buffer, sizeof(buffer), "%.36Qg", number);
 
-        return result >= 0 ? std::move(std::string(buffer)) : float_to_string((f64)number);
+        return result >= 0 ? std::move(std::string(buffer)) : float_to_string(static_cast<f64>(number));
     }
     else
 #endif

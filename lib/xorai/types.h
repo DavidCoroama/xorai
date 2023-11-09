@@ -2,12 +2,8 @@
 #ifndef XORAI_TYPES_H
 #define XORAI_TYPES_H
 
+#include <xorai/config.h>
 #include <vector>
-
-/* Enables 128-bit floating point numbers.
- * If your system is not compatible with __float128,
- * it will be undefined automatically. */
-//#define __F128_SUPPORT__
 
 #define BASIC_UNARY(arg, code) (const auto& arg) { return code; }
 #define BASIC_UNARY_DELETE [](auto* a) { delete(a); }
@@ -141,9 +137,9 @@ public:
 
     template<typename _UnaryOperation>
     std::conditional_t<
-            !__cvector_map_details<_UnaryOperation>::IsVoidReturnType::value,
-            typename __cvector_map_details<_UnaryOperation>::NonVoidReturnType,
-            void
+        !__cvector_map_details<_UnaryOperation>::IsVoidReturnType::value,
+        typename __cvector_map_details<_UnaryOperation>::NonVoidReturnType,
+        void
     >
     map(_UnaryOperation func)
     {

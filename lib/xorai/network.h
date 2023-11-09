@@ -5,12 +5,6 @@
 #include <xorai/matrix.h>
 #include <xorai/model.h>
 
-/* Adds comments to `stdout` during network training. */
-//#define DEBUG
-
-/* Strictly prevents debug mode. */
-//#define NO_DEBUG
-
 template<typename Float>
 class Network
 {

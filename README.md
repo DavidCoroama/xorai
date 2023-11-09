@@ -6,7 +6,7 @@ To work with this project, you'll need to have [JsonCpp](https://github.com/open
 If you are using Ubuntu, Debian, or Kali Linux, you can install JsonCpp using the following command: `sudo apt-get install libjsoncpp-dev`
 
 If you intend to use 128-bit floating-point precision, ensure that your computer supports the `__float128` type 
-and that you have the `quadmath` library installed. Also, make sure to uncomment the `__F128_SUPPORT__` flag in the `xorai/types.h` file. 
+and that you have the `quadmath` library installed. Also, make sure to uncomment the `__F128_SUPPORT__` flag in the `xorai/config.h` file. 
 By default, it is disabled.
 
 ## Training a Model
